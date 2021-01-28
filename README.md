@@ -7,6 +7,8 @@ also be used to confirm network connections to remote squashfs archives.
 If you are a developer wanting to understand the squashfs structure, this might
 be a good base to build from. It's simple and small.
 
+This supports reading local files as well as files shared over NBD.
+
 ### Building
 To start, try building it without TLS support:
 ```bash
@@ -64,4 +66,4 @@ the latest entry.
 ### entry
 *entry* prints the last entry header read.
 ### quit
-*quit*, *q*, *.* all quit the shell
+*quit*, *q* and *.* all quit the shell.
