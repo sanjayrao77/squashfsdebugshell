@@ -11,7 +11,7 @@ This supports reading local files as well as files shared over NBD.
 
 ### Getting started
 First, build the program (see below), then try:
-```bash
+```
 $ ./shell-tls file://example.fs
 Commands: superblock, inode, id X, ls, l, s, cd X, cat X, cd, metablocks, fragment, header, entry, quit
 / $ superblock
