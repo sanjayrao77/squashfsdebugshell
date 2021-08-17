@@ -34,6 +34,7 @@
 #include <gnutls/gnutls.h>
 #define DEBUG
 #include "common/conventions.h"
+#include "misc.h"
 
 #include "nbdtlsclient.h"
 
@@ -237,6 +238,7 @@ error:
 // option replies
 #define NBD_REPLY_MAGIC							(0x3e889045565a9)
 #define NBD_REP_ACK									(1)
+#define NBD_REP_INFO								(3)
 #define NBD_REP_ERRBIT							(1<<31)
 #define NBD_REP_ERR_UNSUP						((1<<31) + 1)
 #define NBD_REP_ERR_POLICY					((1<<31) + 2)
@@ -251,6 +253,7 @@ error:
 #define NBD_REQUEST_MAGIC					(0x25609513)
 // info
 #define NBD_INFO_EXPORT							(0)
+#define NBD_INFO_NAME							(1)
 // transmission flags
 #define NBD_FLAG_HAS_FLAGS					(1<<0)
 #define NBD_FLAG_READ_ONLY					(1<<1)
@@ -327,6 +330,37 @@ error:
 	return -1;
 }
 
+static int eatreplies(struct nbdtlsclient *n, time_t maxtime) {
+unsigned char buffer[200];
+while (1) {
+	unsigned int nbdrep;
+	if (tls_timeout_readn(n->tlssession,buffer,20,maxtime)) GOTOERROR;
+	if (timeout_readn(n->fd,buffer,20,maxtime)) GOTOERROR;
+	if (getu64(buffer)!=NBD_REPLY_MAGIC) GOTOERROR;
+	if (getu32(buffer+8)!=NBD_OPT_GO) GOTOERROR;
+	nbdrep=getu32(buffer+12);
+	if (nbdrep==NBD_REP_INFO) {
+		unsigned int count,nbdinfo;
+		count=getu32(buffer+16);
+		if (count>200) { fprintf(stderr,"Reply was too large to handle (%u>200)\n",count); GOTOERROR; }
+		if (timeout_readn(n->fd,buffer,count,maxtime)) GOTOERROR;
+		nbdinfo=getu16(buffer);
+		if (nbdinfo!=NBD_INFO_NAME) GOTOERROR;
+		(ignore)safeprint(buffer+2,count-2,stderr);
+		fputc('\n',stderr);
+	} else if (nbdrep==NBD_REP_ACK) {
+		if (getu32(buffer+16)!=0) GOTOERROR;
+		break;
+	} else {
+		fprintf(stderr,"Unhandled reply: %u\n",nbdrep);
+		GOTOERROR;
+	}
+}
+return 0;
+error:
+	return -1;
+}
+
 static int exportname_negotiate(struct nbdtlsclient *n, time_t maxtime) {
 unsigned char buffer[20];
 unsigned int exportnamelen;
@@ -369,11 +403,7 @@ tflags=getu16(buffer+10);
 if (!(tflags&NBD_FLAG_HAS_FLAGS)) GOTOERROR;
 // if (tflags&NBD_FLAG_SEND_DF) n->isdfoption=1; // not needed
 // fprintf(stderr,"Flags: %u %x\n",tflags,tflags);
-if (tls_timeout_readn(n->tlssession,buffer,20,maxtime)) GOTOERROR;
-if (getu64(buffer)!=NBD_REPLY_MAGIC) GOTOERROR;
-if (getu32(buffer+8)!=NBD_OPT_GO) GOTOERROR;
-if (getu32(buffer+12)!=NBD_REP_ACK) GOTOERROR;
-if (getu32(buffer+16)!=0) GOTOERROR;
+if (eatreplies(n,maxtime)) GOTOERROR;
 return 0;
 error:
 	return -1;
