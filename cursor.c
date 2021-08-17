@@ -28,7 +28,7 @@
 #include "metablock.h"
 #include "archive.h"
 #include "fill.h"
-#include "misc.h"
+#include "sqfsmisc.h"
 
 #include "cursor.h"
 
@@ -41,7 +41,10 @@ unsigned short sod,isuncompressed;
 struct cache_metablock *cache=NULL;
 int leftused=0;
 
-if (offsetinblock>=8192) GOTOERROR;
+if (offsetinblock>=8192) {
+	fprintf(stderr,"offsetinblock:%u, too high to be valid\n",offsetinblock);
+	GOTOERROR;
+}
 c->bytesleft=8192-offsetinblock;
 cache=find_cache_metablock(a->metablocks.treetop,fulloffset);
 if (cache) {

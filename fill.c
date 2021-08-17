@@ -25,7 +25,7 @@
 #include "common/conventions.h"
 #include "metablock.h"
 #include "archive.h"
-#include "misc.h"
+#include "sqfsmisc.h"
 
 #include "fill.h"
 

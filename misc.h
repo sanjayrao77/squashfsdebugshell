@@ -17,6 +17,4 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define getu16(a) le16toh(*(uint16_t*)(a))
-#define getu32(a)	le32toh(*(uint32_t*)(a))
-#define getu64(a) le64toh(*(uint64_t*)(a))
+int safeprint(unsigned char *bytes, unsigned int len, FILE *dest);

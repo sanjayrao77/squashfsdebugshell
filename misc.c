@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <inttypes.h>
 #include <sys/types.h>
@@ -15,3 +16,15 @@
 
 #include "misc.h"
 
+int safeprint(unsigned char *bytes, unsigned int len, FILE *dest) {
+while (len) {
+	if (isprint(*bytes)) fputc(*bytes,dest);
+	else fputc('?',dest);
+	bytes++;
+	len--;
+}
+if (ferror(dest)) GOTOERROR;
+return 0;
+error:
+	return -1;
+}
