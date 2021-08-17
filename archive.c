@@ -28,7 +28,7 @@
 #include <zlib.h>
 #define DEBUG
 #include "common/conventions.h"
-#include "misc.h"
+#include "sqfsmisc.h"
 #include "metablock.h"
 
 #include "archive.h"
